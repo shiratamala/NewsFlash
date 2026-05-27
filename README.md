@@ -61,12 +61,31 @@ filter:
 `filter.enabled: false` にすると全件通知します。
 `filter.default-broadcast: true` にすると、キーワードに一致しないニュースも通知します。
 
+## P2P地震情報
+
+P2P地震情報 WebSocket API から気象庁の地震情報をリアルタイム受信します。
+初期設定では最大震度4以上を通知します。
+
+```yaml
+p2pquake:
+  enabled: true
+  earthquake:
+    enabled: true
+    min-scale: 40
+```
+
 ## Data Source
 
 外務省 海外安全情報オープンデータ:
 
 ```text
 https://www.ezairyu.mofa.go.jp/opendata/area/newarrivalL.xml
+```
+
+P2P地震情報 WebSocket API:
+
+```text
+wss://api.p2pquake.net/v2/ws
 ```
 
 利用マニュアルでは、新着情報は固定URLで提供され、全データは概ね5分間隔で更新されるとされています。

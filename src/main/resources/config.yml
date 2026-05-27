@@ -28,6 +28,30 @@ mofa:
   # plugins/NewsFlash/mofa-seen.txt が無制限に増えるのを防ぎます。
   seen-history-limit: 1000
 
+p2pquake:
+  # P2P地震情報 WebSocket API の取得を有効にします。
+  enabled: true
+
+  # P2P地震情報のリアルタイム配信URLです。通常は変更不要です。
+  websocket-url: "wss://api.p2pquake.net/v2/ws"
+
+  # WebSocket切断時に再接続まで待つ秒数です。
+  reconnect-delay-seconds: 10
+
+  # 重複配信を防ぐため、受信済みIDを保持する最大件数です。
+  seen-history-limit: 1000
+
+  earthquake:
+    # 気象庁の地震情報をチャットへ通知します。
+    enabled: true
+
+    # 通知する最小震度です。
+    # 40=震度4, 45=震度5弱, 50=震度5強, 55=震度6弱, 60=震度6強, 70=震度7
+    min-scale: 40
+
+    # 最大震度不明の地震情報も通知するかどうかです。
+    include-unknown-scale: false
+
 filter:
   # 通知キーワードフィルタを有効にします。
   # true の場合、下の keywords に一致したニュースだけ通知します。

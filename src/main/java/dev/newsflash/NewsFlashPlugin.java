@@ -4,6 +4,7 @@ import dev.newsflash.broadcast.NewsBroadcaster;
 import dev.newsflash.config.NewsFlashConfig;
 import dev.newsflash.provider.NewsProvider;
 import dev.newsflash.provider.mofa.MofaNewsProvider;
+import dev.newsflash.provider.p2pquake.P2pQuakeRealtimeProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -14,6 +15,7 @@ public final class NewsFlashPlugin extends JavaPlugin {
     private NewsFlashConfig pluginConfig;
     private NewsBroadcaster broadcaster;
     private NewsScheduler scheduler;
+    private P2pQuakeRealtimeProvider p2pQuakeProvider;
     private List<NewsProvider> providers;
 
     @Override
@@ -33,6 +35,9 @@ public final class NewsFlashPlugin extends JavaPlugin {
     public void onDisable() {
         if (scheduler != null) {
             scheduler.stop();
+        }
+        if (p2pQuakeProvider != null) {
+            p2pQuakeProvider.stop();
         }
     }
 
@@ -61,14 +66,20 @@ public final class NewsFlashPlugin extends JavaPlugin {
         if (scheduler != null) {
             scheduler.stop();
         }
+        if (p2pQuakeProvider != null) {
+            p2pQuakeProvider.stop();
+            p2pQuakeProvider = null;
+        }
 
         pluginConfig = NewsFlashConfig.from(getConfig());
         broadcaster = new NewsBroadcaster(this, pluginConfig.broadcastConfig());
         providers = createProviders(pluginConfig);
         scheduler = new NewsScheduler(this, providers, broadcaster);
         scheduler.start();
+        p2pQuakeProvider = new P2pQuakeRealtimeProvider(this, pluginConfig.p2pQuakeConfig(), broadcaster);
+        p2pQuakeProvider.start();
 
-        getLogger().info("NewsFlash enabled with " + providers.size() + " provider(s).");
+        getLogger().info("NewsFlash enabled with " + providers.size() + " polling provider(s).");
     }
 
     private List<NewsProvider> createProviders(NewsFlashConfig config) {

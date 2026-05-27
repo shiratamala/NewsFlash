@@ -22,6 +22,8 @@ public final class NewsFlashCommand implements CommandExecutor, TabCompleter {
         if (args.length == 0 || args[0].equalsIgnoreCase("status")) {
             sender.sendMessage("NewsFlash providers: " + plugin.providers().size());
             plugin.providers().forEach(provider -> sender.sendMessage("- " + provider.name() + ": first check after " + provider.initialDelaySeconds() + " second(s), then every " + provider.pollIntervalMinutes() + " minute(s)"));
+            sender.sendMessage("- P2P地震情報: " + (plugin.pluginConfig().p2pQuakeConfig().enabled() ? "enabled" : "disabled")
+                + ", min scale " + plugin.pluginConfig().p2pQuakeConfig().minScale());
             return true;
         }
 
