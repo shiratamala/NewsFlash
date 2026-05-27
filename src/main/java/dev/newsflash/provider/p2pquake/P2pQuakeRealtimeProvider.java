@@ -151,7 +151,7 @@ public final class P2pQuakeRealtimeProvider implements WebSocket.Listener {
 
     private QuakeMatch matchQuake(JsonObject root, JsonObject earthquake) {
         int nationwideMaxScale = intValue(earthquake, "maxScale", -1);
-        if (config.targetPrefectures().isEmpty()) {
+        if (!config.targetPrefecturesEnabled() || config.targetPrefectures().isEmpty()) {
             return new QuakeMatch(shouldBroadcastScale(nationwideMaxScale), nationwideMaxScale, nationwideMaxScale, List.of());
         }
 
@@ -213,7 +213,7 @@ public final class P2pQuakeRealtimeProvider implements WebSocket.Listener {
     }
 
     private String targetAreaText(QuakeMatch match) {
-        if (config.targetPrefectures().isEmpty()) {
+        if (!config.targetPrefecturesEnabled() || config.targetPrefectures().isEmpty()) {
             return "";
         }
         if (match.matchedAreas().isEmpty()) {
@@ -223,7 +223,7 @@ public final class P2pQuakeRealtimeProvider implements WebSocket.Listener {
     }
 
     private String matchedKeyword(QuakeMatch match) {
-        if (config.targetPrefectures().isEmpty()) {
+        if (!config.targetPrefecturesEnabled() || config.targetPrefectures().isEmpty()) {
             return "最大震度" + scaleLabel(match.nationwideMaxScale());
         }
         return "対象地域最大震度" + scaleLabel(match.targetMaxScale());

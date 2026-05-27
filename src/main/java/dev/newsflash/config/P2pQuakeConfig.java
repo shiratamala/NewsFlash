@@ -8,6 +8,7 @@ public record P2pQuakeConfig(
     int reconnectDelaySeconds,
     boolean earthquakeEnabled,
     int minScale,
+    boolean targetPrefecturesEnabled,
     List<String> targetPrefectures,
     boolean includeUnknownScale,
     int seenHistoryLimit

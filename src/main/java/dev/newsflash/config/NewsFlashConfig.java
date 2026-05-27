@@ -26,7 +26,8 @@ public record NewsFlashConfig(
                 Math.max(1, config.getInt("p2pquake.reconnect-delay-seconds", 10)),
                 config.getBoolean("p2pquake.earthquake.enabled", true),
                 Math.max(10, config.getInt("p2pquake.earthquake.min-scale", 40)),
-                config.getStringList("p2pquake.earthquake.target-prefectures").stream()
+                config.getBoolean("p2pquake.earthquake.target-prefectures.enabled", false),
+                stringList(config, "p2pquake.earthquake.target-prefectures.list", "p2pquake.earthquake.target-prefectures").stream()
                     .map(String::trim)
                     .filter(prefecture -> !prefecture.isBlank())
                     .toList(),

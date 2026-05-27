@@ -76,13 +76,13 @@ p2pquake:
     # 40=震度4, 45=震度5弱, 50=震度5強, 55=震度6弱, 60=震度6強, 70=震度7
     min-scale: 40
 
-    # 通知対象にする都道府県です。
-    # 空の場合は全国を対象にします。
-    # 例:
-    # target-prefectures:
-    #   - "東京都"
-    #   - "神奈川県"
-    target-prefectures: []
+    # 通知対象を特定の都道府県に絞る場合に使います。
+    # enabled: false の場合は全国を対象にします。
+    target-prefectures:
+      enabled: false
+      list:
+        # - "東京都"
+        # - "神奈川県"
 
     # 最大震度不明の地震情報も通知するかどうかです。
     include-unknown-scale: false
