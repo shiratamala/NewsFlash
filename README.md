@@ -110,6 +110,7 @@ p2pquake:
   earthquake:
     enabled: true
     min-scale: 40
+    target-prefectures: []
     include-unknown-scale: false
 ```
 
@@ -126,6 +127,17 @@ p2pquake:
 | `55` | 震度6弱 |
 | `60` | 震度6強 |
 | `70` | 震度7 |
+
+`target-prefectures` が空の場合は全国を対象にします。都道府県名を設定すると、その地域の観測震度が `min-scale` 以上の場合だけ通知します。
+
+```yaml
+p2pquake:
+  earthquake:
+    min-scale: 40
+    target-prefectures:
+      - "東京都"
+      - "神奈川県"
+```
 
 ## チャット表示
 

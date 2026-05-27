@@ -1,6 +1,7 @@
 package dev.newsflash.provider.p2pquake;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.newsflash.NewsFlashPlugin;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -133,13 +135,13 @@ public final class P2pQuakeRealtimeProvider implements WebSocket.Listener {
                 return;
             }
 
-            int maxScale = intValue(earthquake, "maxScale", -1);
-            if (!shouldBroadcast(maxScale)) {
+            QuakeMatch match = matchQuake(root, earthquake);
+            if (!match.shouldBroadcast()) {
                 remember(id);
                 return;
             }
 
-            NewsItem item = toNewsItem(root, earthquake, maxScale);
+            NewsItem item = toNewsItem(root, earthquake, match);
             remember(id);
             Bukkit.getScheduler().runTask(plugin, () -> broadcaster.broadcast(List.of(item)));
         } catch (Exception exception) {
@@ -147,25 +149,56 @@ public final class P2pQuakeRealtimeProvider implements WebSocket.Listener {
         }
     }
 
-    private boolean shouldBroadcast(int maxScale) {
-        if (maxScale < 0) {
-            return config.includeUnknownScale();
+    private QuakeMatch matchQuake(JsonObject root, JsonObject earthquake) {
+        int nationwideMaxScale = intValue(earthquake, "maxScale", -1);
+        if (config.targetPrefectures().isEmpty()) {
+            return new QuakeMatch(shouldBroadcastScale(nationwideMaxScale), nationwideMaxScale, nationwideMaxScale, List.of());
         }
-        return maxScale >= config.minScale();
+
+        List<String> matchedAreas = new ArrayList<>();
+        int targetMaxScale = -1;
+        JsonArray points = arrayValue(root, "points");
+        if (points != null) {
+            for (JsonElement element : points) {
+                if (!element.isJsonObject()) {
+                    continue;
+                }
+                JsonObject point = element.getAsJsonObject();
+                String pref = stringValue(point, "pref", "");
+                int scale = intValue(point, "scale", -1);
+                if (!config.targetPrefectures().contains(pref)) {
+                    continue;
+                }
+                targetMaxScale = Math.max(targetMaxScale, scale);
+                if (scale >= config.minScale() && matchedAreas.size() < 5) {
+                    matchedAreas.add(pref + " " + stringValue(point, "addr", "") + " 震度" + scaleLabel(scale));
+                }
+            }
+        }
+
+        return new QuakeMatch(shouldBroadcastScale(targetMaxScale), nationwideMaxScale, targetMaxScale, List.copyOf(matchedAreas));
     }
 
-    private NewsItem toNewsItem(JsonObject root, JsonObject earthquake, int maxScale) {
+    private boolean shouldBroadcastScale(int scale) {
+        if (scale < 0) {
+            return config.includeUnknownScale();
+        }
+        return scale >= config.minScale();
+    }
+
+    private NewsItem toNewsItem(JsonObject root, JsonObject earthquake, QuakeMatch match) {
         JsonObject hypocenter = objectValue(earthquake, "hypocenter");
         String hypocenterName = hypocenter == null ? "震源不明" : stringValue(hypocenter, "name", "震源不明");
         double magnitude = hypocenter == null ? -1.0 : doubleValue(hypocenter, "magnitude", -1.0);
         int depth = hypocenter == null ? -1 : intValue(hypocenter, "depth", -1);
         String tsunami = stringValue(earthquake, "domesticTsunami", "Unknown");
 
-        String title = "地震情報: 最大震度" + scaleLabel(maxScale) + " " + hypocenterName;
+        String title = "地震情報: 最大震度" + scaleLabel(match.nationwideMaxScale()) + " " + hypocenterName;
         String lead = "発生時刻: " + stringValue(earthquake, "time", "不明")
             + " / M" + (magnitude < 0 ? "不明" : String.format("%.1f", magnitude))
             + " / 深さ" + (depth < 0 ? "不明" : depth + "km")
-            + " / 津波: " + tsunamiLabel(tsunami);
+            + " / 津波: " + tsunamiLabel(tsunami)
+            + targetAreaText(match);
 
         return new NewsItem(
             stringValue(root, "id", ""),
@@ -175,8 +208,25 @@ public final class P2pQuakeRealtimeProvider implements WebSocket.Listener {
             lead,
             "https://www.p2pquake.net/",
             parseTime(stringValue(root, "time", "")),
-            "最大震度" + scaleLabel(maxScale)
+            matchedKeyword(match)
         );
+    }
+
+    private String targetAreaText(QuakeMatch match) {
+        if (config.targetPrefectures().isEmpty()) {
+            return "";
+        }
+        if (match.matchedAreas().isEmpty()) {
+            return " / 対象地域最大震度: " + scaleLabel(match.targetMaxScale());
+        }
+        return " / 対象地域: " + String.join(", ", match.matchedAreas());
+    }
+
+    private String matchedKeyword(QuakeMatch match) {
+        if (config.targetPrefectures().isEmpty()) {
+            return "最大震度" + scaleLabel(match.nationwideMaxScale());
+        }
+        return "対象地域最大震度" + scaleLabel(match.targetMaxScale());
     }
 
     private void scheduleReconnect() {
@@ -256,6 +306,14 @@ public final class P2pQuakeRealtimeProvider implements WebSocket.Listener {
         return element.getAsJsonObject();
     }
 
+    private JsonArray arrayValue(JsonObject object, String key) {
+        JsonElement element = object.get(key);
+        if (element == null || !element.isJsonArray()) {
+            return null;
+        }
+        return element.getAsJsonArray();
+    }
+
     private String stringValue(JsonObject object, String key, String fallback) {
         JsonElement element = object.get(key);
         if (element == null || element.isJsonNull()) {
@@ -278,5 +336,13 @@ public final class P2pQuakeRealtimeProvider implements WebSocket.Listener {
             return fallback;
         }
         return element.getAsDouble();
+    }
+
+    private record QuakeMatch(
+        boolean shouldBroadcast,
+        int nationwideMaxScale,
+        int targetMaxScale,
+        List<String> matchedAreas
+    ) {
     }
 }
