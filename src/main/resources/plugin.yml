@@ -1,7 +1,7 @@
 name: NewsFlashJP
 version: ${project.version}
 main: dev.newsflash.NewsFlashPlugin
-api-version: '1.21'
+api-version: '1.20'
 author: rarala
 description: Japan-focused safety alerts for Minecraft server chat.
 commands:

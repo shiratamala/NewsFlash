@@ -1,6 +1,6 @@
 # NewsFlashJP
 
-Minecraft 1.21.8 / Paper 向けのニュース速報プラグインです。
+Paper 1.20.6 以降向けのニュース速報プラグインです。
 
 外務省 海外安全情報オープンデータと P2P地震情報 WebSocket API を利用し、通知対象のニュースや地震情報をサーバーチャットへ流します。
 
@@ -20,9 +20,12 @@ Minecraft 1.21.8 / Paper 向けのニュース速報プラグインです。
 
 ## 対応環境
 
-- Minecraft: 1.21.8
 - Server: Paper
-- Java: 21
+- Minecraft: 1.20.6 以降
+- Java: 21 以降（Minecraft 1.20.6 - 1.21.x）
+- Java: 25 以降（Minecraft 26.x）
+
+Paper API 1.20.6 を基準にビルドし、1.20.6 以降の Paper 系サーバーで使える範囲を広く取る方針です。
 
 ## ビルド
 
