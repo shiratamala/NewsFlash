@@ -50,6 +50,11 @@ public final class RssNewsProvider implements NewsProvider {
     }
 
     @Override
+    public String id() {
+        return "rss";
+    }
+
+    @Override
     public String name() {
         return "RSS";
     }
@@ -64,26 +69,63 @@ public final class RssNewsProvider implements NewsProvider {
         return config.pollIntervalMinutes();
     }
 
+    public void validateFeeds() {
+        for (RssFeedConfig feed : config.feeds()) {
+            if (!feed.enabled()) {
+                logger.info("RSS feed validation skipped: " + feed.id() + " enabled=false");
+                continue;
+            }
+            if (feed.url().isBlank()) {
+                logger.warning("RSS feed validation failed: " + feed.id() + " url is empty.");
+                continue;
+            }
+            try {
+                List<NewsItem> items = fetchFeed(feed);
+                if (items.isEmpty()) {
+                    logger.warning("RSS feed validation failed: " + feed.id() + " no RSS item or Atom entry found.");
+                    continue;
+                }
+                logger.info("RSS feed validation OK: " + feed.id() + " fetched=" + items.size());
+            } catch (Exception exception) {
+                logger.warning("RSS feed validation failed: " + feed.id() + " " + exception.getMessage());
+            }
+        }
+    }
+
     @Override
     public List<NewsItem> fetchNewItems(boolean allowInitialSuppress) throws Exception {
         List<NewsItem> result = new ArrayList<>();
         for (RssFeedConfig feed : config.feeds()) {
-            if (!feed.enabled() || feed.url().isBlank()) {
+            if (!feed.enabled()) {
+                logger.info("RSS feed skipped: " + feed.id() + " enabled=false");
+                continue;
+            }
+            if (feed.url().isBlank()) {
+                logger.warning("RSS feed skipped: " + feed.id() + " is enabled, but url is empty.");
                 continue;
             }
             List<NewsItem> items = fetchFeed(feed);
+            int newCount = 0;
+            int matchedCount = 0;
             for (NewsItem item : items) {
                 if (seenIds.contains(item.id())) {
                     continue;
                 }
+                newCount++;
                 seenIds.add(item.id());
                 if (matchesFilter(item, feed.filterConfig())) {
+                    matchedCount++;
                     result.add(item);
                 }
                 if (result.size() >= config.maxBroadcastPerPoll()) {
                     break;
                 }
             }
+            logger.info("RSS feed " + feed.id()
+                + " fetched=" + items.size()
+                + " new=" + newCount
+                + " matched=" + matchedCount
+                + " filter=" + (feed.filterConfig().enabled() ? "enabled" : "disabled"));
             if (result.size() >= config.maxBroadcastPerPoll()) {
                 break;
             }
@@ -197,7 +239,7 @@ public final class RssNewsProvider implements NewsProvider {
                 return true;
             }
         }
-        return filter.defaultBroadcast();
+        return false;
     }
 
     private String stableId(RssFeedConfig feed, String guid, String link, String title, String date) {

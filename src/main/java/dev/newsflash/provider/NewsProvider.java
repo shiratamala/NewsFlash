@@ -4,6 +4,8 @@ import dev.newsflash.model.NewsItem;
 import java.util.List;
 
 public interface NewsProvider {
+    String id();
+
     String name();
 
     int initialDelaySeconds();

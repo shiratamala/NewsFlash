@@ -48,14 +48,24 @@ target/NewsFlash-0.1.0.jar
 ```text
 /newsflash status
 /newsflash check
+/newsflash check mofa
+/newsflash check rss
 /newsflash reload
+/newsflash reload mofa
+/newsflash reload p2pquake
+/newsflash reload rss
 ```
 
 | コマンド | 説明 |
 |---|---|
 | `/newsflash status` | 有効な取得元と設定状態を表示します |
-| `/newsflash check` | 外務省データを即時チェックします |
-| `/newsflash reload` | `config.yml` を再読み込みします |
+| `/newsflash check` | 定期取得型の取得元を即時チェックします |
+| `/newsflash check mofa` | 外務省データを即時チェックします |
+| `/newsflash check rss` | RSS/Atomを即時チェックします |
+| `/newsflash reload` | `config.yml` 全体を再読み込みします |
+| `/newsflash reload mofa` | 外務省データ設定だけ再読み込みします |
+| `/newsflash reload p2pquake` | P2P地震情報のWebSocketを再接続します |
+| `/newsflash reload rss` | RSS/Atom設定だけ再読み込みします |
 
 権限:
 
@@ -87,15 +97,13 @@ mofa:
 mofa:
   filter:
     enabled: true
-    default-broadcast: false
     keywords:
       - "ミサイル"
       - "退避"
       - "地震"
 ```
 
-`mofa.filter.enabled: false` にすると外務省データを全件通知します。
-`mofa.filter.default-broadcast: true` にすると、キーワードに一致しない外務省ニュースも通知します。
+`mofa.filter.enabled: false` にすると外務省データを全件通知します。`true` の場合はキーワードに一致した外務省ニュースだけ通知します。
 
 ## P2P地震情報
 
@@ -174,13 +182,12 @@ rss:
     #   enabled: true
     #   filter:
     #     enabled: false
-    #     default-broadcast: true
     #     keywords:
     #       - "地震"
     #       - "警報"
 ```
 
-`filter.enabled: true` にすると、そのフィードの `title + description` に `keywords` のいずれかが含まれる記事だけを通知できます。
+`filter.enabled: false` の場合はそのフィードを全件通知します。`true` にすると、そのフィードの `title + description` に `keywords` のいずれかが含まれる記事だけを通知できます。
 
 ## データソース
 

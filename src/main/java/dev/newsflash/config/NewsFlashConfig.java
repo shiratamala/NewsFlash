@@ -49,7 +49,6 @@ public record NewsFlashConfig(
             ),
             new FilterConfig(
                 config.getBoolean("mofa.filter.enabled", config.getBoolean("filter.enabled", true)),
-                config.getBoolean("mofa.filter.default-broadcast", config.getBoolean("filter.default-broadcast", false)),
                 stringList(config, "mofa.filter.keywords", "filter.keywords").stream()
                     .map(String::trim)
                     .filter(keyword -> !keyword.isBlank())
@@ -75,19 +74,19 @@ public record NewsFlashConfig(
         java.util.List<java.util.Map<?, ?>> maps = config.getMapList("rss.feeds");
         java.util.List<RssFeedConfig> feeds = new java.util.ArrayList<>();
         for (int index = 0; index < maps.size(); index++) {
-            String path = "rss.feeds." + index;
-            String name = config.getString(path + ".name", "RSS Feed " + (index + 1));
-            String url = config.getString(path + ".url", "");
-            String id = config.getString(path + ".id", slug(name.isBlank() ? url : name));
+            java.util.Map<?, ?> map = maps.get(index);
+            java.util.Map<?, ?> filter = mapValue(map, "filter");
+            String name = stringValue(map, "name", "RSS Feed " + (index + 1));
+            String url = stringValue(map, "url", "");
+            String id = stringValue(map, "id", slug(name.isBlank() ? url : name));
             feeds.add(new RssFeedConfig(
                 id,
                 name,
                 url,
-                config.getBoolean(path + ".enabled", true),
+                booleanValue(map, "enabled", true),
                 new FilterConfig(
-                    config.getBoolean(path + ".filter.enabled", false),
-                    config.getBoolean(path + ".filter.default-broadcast", true),
-                    config.getStringList(path + ".filter.keywords").stream()
+                    booleanValue(filter, "enabled", false),
+                    stringList(filter, "keywords").stream()
                         .map(String::trim)
                         .filter(keyword -> !keyword.isBlank())
                         .toList()
@@ -95,6 +94,43 @@ public record NewsFlashConfig(
             ));
         }
         return java.util.List.copyOf(feeds);
+    }
+
+    private static java.util.Map<?, ?> mapValue(java.util.Map<?, ?> map, String key) {
+        Object value = map.get(key);
+        if (value instanceof java.util.Map<?, ?> nested) {
+            return nested;
+        }
+        return java.util.Map.of();
+    }
+
+    private static String stringValue(java.util.Map<?, ?> map, String key, String fallback) {
+        Object value = map.get(key);
+        if (value == null) {
+            return fallback;
+        }
+        return value.toString();
+    }
+
+    private static boolean booleanValue(java.util.Map<?, ?> map, String key, boolean fallback) {
+        Object value = map.get(key);
+        if (value instanceof Boolean bool) {
+            return bool;
+        }
+        if (value == null) {
+            return fallback;
+        }
+        return Boolean.parseBoolean(value.toString());
+    }
+
+    private static java.util.List<String> stringList(java.util.Map<?, ?> map, String key) {
+        Object value = map.get(key);
+        if (!(value instanceof java.util.List<?> list)) {
+            return java.util.List.of();
+        }
+        return list.stream()
+            .map(Object::toString)
+            .toList();
     }
 
     private static String slug(String value) {

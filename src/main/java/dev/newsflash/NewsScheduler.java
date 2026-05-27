@@ -5,7 +5,9 @@ import dev.newsflash.model.NewsItem;
 import dev.newsflash.provider.NewsProvider;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
@@ -16,8 +18,8 @@ public final class NewsScheduler {
 
     private final NewsFlashPlugin plugin;
     private final List<NewsProvider> providers;
-    private final NewsBroadcaster broadcaster;
-    private final List<BukkitTask> tasks = new ArrayList<>();
+    private NewsBroadcaster broadcaster;
+    private final Map<String, BukkitTask> tasks = new HashMap<>();
 
     public NewsScheduler(NewsFlashPlugin plugin, List<NewsProvider> providers, NewsBroadcaster broadcaster) {
         this.plugin = plugin;
@@ -28,14 +30,12 @@ public final class NewsScheduler {
     public void start() {
         stop();
         for (NewsProvider provider : providers) {
-            long initialDelayTicks = Math.max(0L, provider.initialDelaySeconds()) * TICKS_PER_SECOND;
-            long intervalTicks = Math.max(1L, provider.pollIntervalMinutes()) * TICKS_PER_MINUTE;
-            tasks.add(Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> poll(provider, true), initialDelayTicks, intervalTicks));
+            startProvider(provider);
         }
     }
 
     public void stop() {
-        for (BukkitTask task : tasks) {
+        for (BukkitTask task : tasks.values()) {
             task.cancel();
         }
         tasks.clear();
@@ -45,6 +45,44 @@ public final class NewsScheduler {
         for (NewsProvider provider : providers) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> poll(provider, suppressInitialBroadcast));
         }
+    }
+
+    public boolean runNow(String providerId, boolean suppressInitialBroadcast) {
+        for (NewsProvider provider : providers) {
+            if (provider.id().equalsIgnoreCase(providerId)) {
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> poll(provider, suppressInitialBroadcast));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void replaceProvider(NewsProvider provider) {
+        removeProvider(provider.id());
+        providers.add(provider);
+        startProvider(provider);
+    }
+
+    public boolean removeProvider(String providerId) {
+        BukkitTask task = tasks.remove(providerId.toLowerCase());
+        if (task != null) {
+            task.cancel();
+        }
+        return providers.removeIf(provider -> provider.id().equalsIgnoreCase(providerId));
+    }
+
+    public List<NewsProvider> providers() {
+        return List.copyOf(providers);
+    }
+
+    public void broadcaster(NewsBroadcaster broadcaster) {
+        this.broadcaster = broadcaster;
+    }
+
+    private void startProvider(NewsProvider provider) {
+        long initialDelayTicks = Math.max(0L, provider.initialDelaySeconds()) * TICKS_PER_SECOND;
+        long intervalTicks = Math.max(1L, provider.pollIntervalMinutes()) * TICKS_PER_MINUTE;
+        tasks.put(provider.id().toLowerCase(), Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> poll(provider, true), initialDelayTicks, intervalTicks));
     }
 
     private void poll(NewsProvider provider, boolean allowInitialSuppress) {

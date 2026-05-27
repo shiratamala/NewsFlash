@@ -7,7 +7,7 @@ description: Broadcasts emergency and safety news to Minecraft server chat.
 commands:
   newsflash:
     description: Manage NewsFlash.
-    usage: /newsflash <reload|check|status>
+    usage: /newsflash <reload|check|status> [mofa|p2pquake|rss]
     permission: newsflash.admin
 permissions:
   newsflash.admin:

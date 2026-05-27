@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class NewsFlashCommand implements CommandExecutor, TabCompleter {
     private static final List<String> SUBCOMMANDS = List.of("reload", "check", "status");
+    private static final List<String> TARGETS = List.of("mofa", "p2pquake", "rss");
 
     private final NewsFlashPlugin plugin;
 
@@ -28,18 +29,37 @@ public final class NewsFlashCommand implements CommandExecutor, TabCompleter {
                 + ", eew " + (plugin.pluginConfig().p2pQuakeConfig().eewEnabled() ? "enabled" : "disabled"));
             sender.sendMessage("- RSS/Atom: " + (plugin.pluginConfig().rssConfig().enabled() ? "enabled" : "disabled")
                 + ", feeds " + plugin.pluginConfig().rssConfig().feeds().size());
+            plugin.pluginConfig().rssConfig().feeds().forEach(feed -> sender.sendMessage("  - " + feed.id()
+                + ": " + (feed.enabled() ? "enabled" : "disabled")
+                + ", filter " + (feed.filterConfig().enabled() ? "enabled" : "disabled")));
             return true;
         }
 
         if (args[0].equalsIgnoreCase("reload")) {
-            plugin.reloadPlugin();
-            sender.sendMessage("NewsFlash reloaded.");
+            if (args.length == 1) {
+                plugin.reloadPlugin();
+                sender.sendMessage("NewsFlash reloaded.");
+                return true;
+            }
+            if (plugin.reloadTarget(args[1])) {
+                sender.sendMessage("NewsFlash reloaded: " + args[1]);
+                return true;
+            }
+            sender.sendMessage("Unknown NewsFlash reload target: " + args[1]);
             return true;
         }
 
         if (args[0].equalsIgnoreCase("check")) {
-            plugin.runManualCheck();
-            sender.sendMessage("NewsFlash check started.");
+            if (args.length == 1) {
+                plugin.runManualCheck();
+                sender.sendMessage("NewsFlash check started.");
+                return true;
+            }
+            if (plugin.runManualCheck(args[1])) {
+                sender.sendMessage("NewsFlash check started: " + args[1]);
+                return true;
+            }
+            sender.sendMessage("Unknown or unsupported NewsFlash check target: " + args[1]);
             return true;
         }
 
@@ -48,12 +68,21 @@ public final class NewsFlashCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (args.length == 1) {
+            String prefix = args[0].toLowerCase();
+            return SUBCOMMANDS.stream()
+                .filter(subcommand -> subcommand.startsWith(prefix))
+                .toList();
+        }
+        if (args.length == 2 && (args[0].equalsIgnoreCase("reload") || args[0].equalsIgnoreCase("check"))) {
+            String prefix = args[1].toLowerCase();
+            return TARGETS.stream()
+                .filter(target -> target.startsWith(prefix))
+                .toList();
+        }
         if (args.length != 1) {
             return List.of();
         }
-        String prefix = args[0].toLowerCase();
-        return SUBCOMMANDS.stream()
-            .filter(subcommand -> subcommand.startsWith(prefix))
-            .toList();
+        return List.of();
     }
 }

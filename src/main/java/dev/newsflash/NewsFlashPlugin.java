@@ -9,6 +9,7 @@ import dev.newsflash.provider.rss.RssNewsProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -47,12 +48,69 @@ public final class NewsFlashPlugin extends JavaPlugin {
         loadPlugin();
     }
 
+    public boolean reloadTarget(String target) {
+        reloadConfig();
+        pluginConfig = NewsFlashConfig.from(getConfig());
+        broadcaster = new NewsBroadcaster(this, pluginConfig.broadcastConfig());
+        scheduler.broadcaster(broadcaster);
+
+        if (target.equalsIgnoreCase("mofa")) {
+            if (pluginConfig.mofaConfig().enabled()) {
+                scheduler.replaceProvider(new MofaNewsProvider(pluginConfig.mofaConfig(), pluginConfig.mofaFilterConfig(), getDataFolder().toPath(), getLogger()));
+            } else {
+                scheduler.removeProvider("mofa");
+            }
+            providers = scheduler.providers();
+            return true;
+        }
+
+        if (target.equalsIgnoreCase("rss")) {
+            if (pluginConfig.rssConfig().enabled()) {
+                if (pluginConfig.rssConfig().feeds().isEmpty()) {
+                    getLogger().warning("RSS is enabled, but no feeds are configured.");
+                }
+                RssNewsProvider provider = new RssNewsProvider(pluginConfig.rssConfig(), getDataFolder().toPath(), getLogger());
+                validateRssAsync(provider);
+                scheduler.replaceProvider(provider);
+            } else {
+                scheduler.removeProvider("rss");
+            }
+            providers = scheduler.providers();
+            return true;
+        }
+
+        if (target.equalsIgnoreCase("p2pquake")) {
+            if (p2pQuakeProvider != null) {
+                p2pQuakeProvider.stop();
+            }
+            p2pQuakeProvider = new P2pQuakeRealtimeProvider(this, pluginConfig.p2pQuakeConfig(), broadcaster);
+            p2pQuakeProvider.start();
+            return true;
+        }
+
+        return false;
+    }
+
     public void runManualCheck() {
         if (scheduler == null) {
             getLogger().warning("News scheduler is not initialized.");
             return;
         }
         scheduler.runNow(false);
+    }
+
+    public boolean runManualCheck(String target) {
+        if (scheduler == null) {
+            getLogger().warning("News scheduler is not initialized.");
+            return false;
+        }
+        if (target.equalsIgnoreCase("mofa")) {
+            return scheduler.runNow("mofa", false);
+        }
+        if (target.equalsIgnoreCase("rss")) {
+            return scheduler.runNow("rss", false);
+        }
+        return false;
     }
 
     public NewsFlashConfig pluginConfig() {
@@ -92,12 +150,18 @@ public final class NewsFlashPlugin extends JavaPlugin {
             if (config.rssConfig().feeds().isEmpty()) {
                 getLogger().warning("RSS is enabled, but no feeds are configured.");
             }
-            result.add(new RssNewsProvider(config.rssConfig(), getDataFolder().toPath(), getLogger()));
+            RssNewsProvider provider = new RssNewsProvider(config.rssConfig(), getDataFolder().toPath(), getLogger());
+            validateRssAsync(provider);
+            result.add(provider);
         }
 
         if (result.isEmpty()) {
             getLogger().log(Level.WARNING, "No news providers are enabled.");
         }
-        return List.copyOf(result);
+        return result;
+    }
+
+    private void validateRssAsync(RssNewsProvider provider) {
+        Bukkit.getScheduler().runTaskAsynchronously(this, provider::validateFeeds);
     }
 }

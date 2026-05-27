@@ -52,6 +52,11 @@ public final class MofaNewsProvider implements NewsProvider {
     }
 
     @Override
+    public String id() {
+        return "mofa";
+    }
+
+    @Override
     public String name() {
         return "MOFA Overseas Safety";
     }
@@ -151,9 +156,6 @@ public final class MofaNewsProvider implements NewsProvider {
             }
         }
 
-        if (filterConfig.defaultBroadcast()) {
-            return item;
-        }
         return null;
     }
 
