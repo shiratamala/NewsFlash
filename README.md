@@ -80,8 +80,6 @@ mofa:
 
 `mofa.filter.enabled` が `true` の場合、外務省データの `title + lead + type` に `mofa.filter.keywords` のいずれかが含まれるニュースだけを通知します。
 
-このフィルタは外務省データ専用です。P2P地震情報には適用されません。
-
 ```yaml
 mofa:
   filter:
@@ -144,25 +142,6 @@ p2pquake:
         - "東京都"
         - "神奈川県"
 ```
-
-## チャット表示
-
-チャットの接頭辞と本文は `broadcast` で変更できます。
-
-```yaml
-broadcast:
-  prefix: "<red><bold>[NewsFlash]</bold></red>"
-  format: "{prefix} <gold>{source}</gold> <yellow>{title}</yellow> <gray>({date})</gray> <aqua><click:open_url:'{url}'>{url}</click></aqua>"
-  console: true
-```
-
-使用可能な置換:
-
-```text
-{prefix}, {source}, {type}, {title}, {lead}, {keyword}, {date}, {url}
-```
-
-表示形式には MiniMessage が使えます。
 
 ## データソース
 
