@@ -53,6 +53,9 @@ public final class NewsFlashPlugin extends JavaPlugin {
         if (p2pQuakeProvider != null) {
             p2pQuakeProvider.stop();
         }
+        if (broadcaster != null) {
+            broadcaster.close();
+        }
         if (playerLanguageStore != null) {
             playerLanguageStore.close();
         }
@@ -69,6 +72,9 @@ public final class NewsFlashPlugin extends JavaPlugin {
         configurePlayerLanguageStore(pluginConfig);
         messageCache.clear();
         messages = messages(pluginConfig.language());
+        if (broadcaster != null) {
+            broadcaster.close();
+        }
         broadcaster = new NewsBroadcaster(this, pluginConfig.broadcastConfig());
         scheduler.broadcaster(broadcaster);
 
@@ -198,6 +204,9 @@ public final class NewsFlashPlugin extends JavaPlugin {
         if (p2pQuakeProvider != null) {
             p2pQuakeProvider.stop();
             p2pQuakeProvider = null;
+        }
+        if (broadcaster != null) {
+            broadcaster.close();
         }
 
         pluginConfig = NewsFlashConfig.from(getConfig());

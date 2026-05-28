@@ -315,3 +315,59 @@ broadcast:
 
   # 通知内容をサーバーコンソールにも出力します。
   console: true
+
+  chat:
+    # Sends notifications to normal server chat.
+
+    # 通常のサーバーチャットへ通知します。
+    enabled: true
+
+  actionbar:
+    # Shows notifications in the action bar.
+    # Disabled by default because action bars are also used by other plugins.
+    # MiniMessage format is supported.
+    # Available placeholders: {prefix}, {source}, {type}, {title}, {lead}, {keyword}, {date}, {url}, {ticker}
+
+    # アクションバーにも通知を表示します。
+    # 他プラグインも使う領域のため、デフォルトでは無効です。
+    # MiniMessage形式が使えます。
+    # 使用可能な置換: {prefix}, {source}, {type}, {title}, {lead}, {keyword}, {date}, {url}, {ticker}
+    enabled: false
+    format: "{prefix} <yellow>{ticker}</yellow>"
+
+  bossbar:
+    # Shows notifications in the boss bar.
+    # Disabled by default because boss bars are visually prominent.
+    # MiniMessage format is supported.
+    # Available placeholders: {prefix}, {source}, {type}, {title}, {lead}, {keyword}, {date}, {url}, {ticker}
+    # color: PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE
+    # overlay: PROGRESS, NOTCHED_6, NOTCHED_10, NOTCHED_12, NOTCHED_20
+    # progress: 0.0 to 1.0
+
+    # ボスバーにも通知を表示します。
+    # 目立つ表示のため、デフォルトでは無効です。
+    # MiniMessage形式が使えます。
+    # 使用可能な置換: {prefix}, {source}, {type}, {title}, {lead}, {keyword}, {date}, {url}, {ticker}
+    # color: PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE
+    # overlay: PROGRESS, NOTCHED_6, NOTCHED_10, NOTCHED_12, NOTCHED_20
+    # progress: 0.0 から 1.0
+    enabled: false
+    format: "{prefix} <yellow>{ticker}</yellow>"
+    color: "YELLOW"
+    overlay: "PROGRESS"
+    progress: 1.0
+
+  ticker:
+    # Shared scrolling ticker settings for actionbar and bossbar.
+    # width is the visible character count.
+    # interval-ticks is the scroll speed. 20 ticks = 1 second.
+    # duration-seconds is how long each notification remains visible.
+
+    # アクションバーとボスバーで共通の横スクロール設定です。
+    # width は表示される文字数です。
+    # interval-ticks はスクロール速度です。20 ticks = 1秒です。
+    # duration-seconds は1件の通知を表示し続ける秒数です。
+    width: 48
+    interval-ticks: 4
+    duration-seconds: 18
+    separator: "   "

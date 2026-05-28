@@ -15,6 +15,7 @@ Paper 1.20.6 以降向けのニュース速報プラグインです。
 - 津波注意報・津波警報・大津波警報を通知
 - 緊急地震速報（警報）を通知
 - 任意のRSS/Atomフィードを設定して通知
+- チャット、アクションバー、ボスバーへの通知表示
 - 重複通知を防止
 - `/newsflash reload` による設定再読み込み
 
@@ -147,6 +148,35 @@ storage:
 | `sqlite` | `plugins/NewsFlash/newsflash.db` | 個人設定が増えた場合やDB管理したい場合 |
 
 現在保存される個人設定は、プレイヤーごとの言語設定です。
+
+## 通知表示
+
+通知は通常チャットに表示されます。必要に応じて、アクションバーやボスバーにも電光掲示板のような横スクロール表示を追加できます。アクションバーとボスバーは他プラグインと表示領域が競合しやすいため、既定では無効です。
+
+```yaml
+broadcast:
+  chat:
+    enabled: true
+
+  actionbar:
+    enabled: false
+    format: "{prefix} <yellow>{ticker}</yellow>"
+
+  bossbar:
+    enabled: false
+    format: "{prefix} <yellow>{ticker}</yellow>"
+    color: "YELLOW"
+    overlay: "PROGRESS"
+    progress: 1.0
+
+  ticker:
+    width: 48
+    interval-ticks: 4
+    duration-seconds: 18
+    separator: "   "
+```
+
+`{ticker}` は `配信元 タイトル (日時)` のスクロール用テキストです。チャット用の `{source}`、`{title}`、`{date}` などもアクションバーとボスバーの `format` で利用できます。
 
 ## 外務省 海外安全情報
 
