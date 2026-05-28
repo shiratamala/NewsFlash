@@ -53,7 +53,7 @@ public final class NewsFlashPlugin extends JavaPlugin {
     public boolean reloadTarget(String target) {
         reloadConfig();
         pluginConfig = NewsFlashConfig.from(getConfig());
-        messages = new NewsFlashMessages(pluginConfig.language());
+        messages = NewsFlashMessages.load(this, pluginConfig.language());
         broadcaster = new NewsBroadcaster(this, pluginConfig.broadcastConfig());
         scheduler.broadcaster(broadcaster);
 
@@ -138,7 +138,7 @@ public final class NewsFlashPlugin extends JavaPlugin {
         }
 
         pluginConfig = NewsFlashConfig.from(getConfig());
-        messages = new NewsFlashMessages(pluginConfig.language());
+        messages = NewsFlashMessages.load(this, pluginConfig.language());
         broadcaster = new NewsBroadcaster(this, pluginConfig.broadcastConfig());
         providers = createProviders(pluginConfig);
         scheduler = new NewsScheduler(this, providers, broadcaster);
