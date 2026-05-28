@@ -21,6 +21,14 @@ commands:
   check-started: "NewsFlash check started."
   check-started-target: "NewsFlash check started: {target}"
   unknown-check-target: "Unknown or unsupported NewsFlash check target: {target}"
+  language-current: "Default language: {default} / Personal language: {personal}"
+  language-default-changed: "Default language changed to {language}."
+  language-personal-changed: "Personal language changed to {language}."
+  language-personal-cleared: "Personal language cleared; using the default language."
+  language-console-personal-unsupported: "Personal language can only be set by a player."
+  language-unknown: "Unsupported language: {language} / Supported languages: {languages}"
+  language-list: "Supported languages: {languages}"
+  no-permission: "You do not have permission to run this command."
 
 sources:
   mofa: "MOFA Overseas Safety"

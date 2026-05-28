@@ -7,6 +7,11 @@ translation:
   # RSSや外務省データなど、配信元から取得した記事本文は原文のまま表示します。
   language: "ja"
 
+  # /newsflash language default <language> で、この値をゲーム内から変更できます。
+  # /newsflash language personal <language> はプレイヤーごとのコマンド応答言語を変更します。
+  # 個人言語は plugins/NewsFlash/player-languages.yml に保存されます。
+  # 速報通知本文はサーバーのデフォルト言語で生成されます。
+
 mofa:
   # 日本固有寄りの情報ソースです。
   # 外務省が日本人向けに公開している海外安全情報を利用します。

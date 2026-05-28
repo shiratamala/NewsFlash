@@ -2,22 +2,30 @@ package dev.newsflash;
 
 import dev.newsflash.broadcast.NewsBroadcaster;
 import dev.newsflash.config.NewsFlashConfig;
+import dev.newsflash.i18n.LanguageRegistry;
 import dev.newsflash.i18n.NewsFlashMessages;
+import dev.newsflash.i18n.PlayerLanguageStore;
 import dev.newsflash.provider.NewsProvider;
 import dev.newsflash.provider.mofa.MofaNewsProvider;
 import dev.newsflash.provider.p2pquake.P2pQuakeRealtimeProvider;
 import dev.newsflash.provider.rss.RssNewsProvider;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class NewsFlashPlugin extends JavaPlugin {
     private NewsFlashConfig pluginConfig;
     private NewsBroadcaster broadcaster;
     private NewsFlashMessages messages;
+    private PlayerLanguageStore playerLanguageStore;
+    private final Map<String, NewsFlashMessages> messageCache = new HashMap<>();
     private NewsScheduler scheduler;
     private P2pQuakeRealtimeProvider p2pQuakeProvider;
     private List<NewsProvider> providers;
@@ -25,6 +33,7 @@ public final class NewsFlashPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        playerLanguageStore = new PlayerLanguageStore(getDataFolder().toPath(), getLogger());
         loadPlugin();
 
         PluginCommand command = getCommand("newsflash");
@@ -47,13 +56,15 @@ public final class NewsFlashPlugin extends JavaPlugin {
 
     public void reloadPlugin() {
         reloadConfig();
+        playerLanguageStore.reload();
         loadPlugin();
     }
 
     public boolean reloadTarget(String target) {
         reloadConfig();
         pluginConfig = NewsFlashConfig.from(getConfig());
-        messages = NewsFlashMessages.load(this, pluginConfig.language());
+        messageCache.clear();
+        messages = messages(pluginConfig.language());
         broadcaster = new NewsBroadcaster(this, pluginConfig.broadcastConfig());
         scheduler.broadcaster(broadcaster);
 
@@ -124,6 +135,54 @@ public final class NewsFlashPlugin extends JavaPlugin {
         return messages;
     }
 
+    public NewsFlashMessages messages(String language) {
+        String normalized = LanguageRegistry.normalize(language);
+        return messageCache.computeIfAbsent(normalized, key -> NewsFlashMessages.load(this, key));
+    }
+
+    public NewsFlashMessages messages(CommandSender sender) {
+        if (sender instanceof Player player) {
+            return playerLanguageStore.language(player)
+                .map(this::messages)
+                .orElse(messages);
+        }
+        return messages;
+    }
+
+    public String personalLanguage(CommandSender sender) {
+        if (sender instanceof Player player) {
+            return playerLanguageStore.language(player).orElse("default");
+        }
+        return "default";
+    }
+
+    public boolean setDefaultLanguage(String language) {
+        if (!LanguageRegistry.supported(language)) {
+            return false;
+        }
+        String normalized = LanguageRegistry.normalize(language);
+        getConfig().set("translation.language", normalized);
+        saveConfig();
+        reloadPlugin();
+        return true;
+    }
+
+    public boolean setPersonalLanguage(CommandSender sender, String language) {
+        if (!(sender instanceof Player player) || !LanguageRegistry.supported(language)) {
+            return false;
+        }
+        playerLanguageStore.setLanguage(player, language);
+        return true;
+    }
+
+    public boolean clearPersonalLanguage(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            return false;
+        }
+        playerLanguageStore.clearLanguage(player);
+        return true;
+    }
+
     public List<NewsProvider> providers() {
         return providers;
     }
@@ -138,7 +197,8 @@ public final class NewsFlashPlugin extends JavaPlugin {
         }
 
         pluginConfig = NewsFlashConfig.from(getConfig());
-        messages = NewsFlashMessages.load(this, pluginConfig.language());
+        messageCache.clear();
+        messages = messages(pluginConfig.language());
         broadcaster = new NewsBroadcaster(this, pluginConfig.broadcastConfig());
         providers = createProviders(pluginConfig);
         scheduler = new NewsScheduler(this, providers, broadcaster);

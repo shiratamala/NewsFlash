@@ -1,5 +1,6 @@
 package dev.newsflash;
 
+import dev.newsflash.i18n.LanguageRegistry;
 import java.util.List;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -9,8 +10,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class NewsFlashCommand implements CommandExecutor, TabCompleter {
-    private static final List<String> SUBCOMMANDS = List.of("reload", "check", "status");
+    private static final List<String> SUBCOMMANDS = List.of("reload", "check", "status", "language");
     private static final List<String> TARGETS = List.of("mofa", "p2pquake", "rss");
+    private static final List<String> LANGUAGE_TARGETS = List.of("default", "personal", "list");
 
     private final NewsFlashPlugin plugin;
 
@@ -21,47 +23,125 @@ public final class NewsFlashCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0 || args[0].equalsIgnoreCase("status")) {
-            sender.sendMessage(plugin.messages().providerCount(plugin.providers().size()));
-            plugin.providers().forEach(provider -> sender.sendMessage(plugin.messages().providerSchedule(provider.name(), provider.initialDelaySeconds(), provider.pollIntervalMinutes())));
-            sender.sendMessage(plugin.messages().p2pStatus(
+            if (!requireAdmin(sender)) {
+                return true;
+            }
+            sender.sendMessage(plugin.messages(sender).providerCount(plugin.providers().size()));
+            plugin.providers().forEach(provider -> sender.sendMessage(plugin.messages(sender).providerSchedule(provider.name(), provider.initialDelaySeconds(), provider.pollIntervalMinutes())));
+            sender.sendMessage(plugin.messages(sender).p2pStatus(
                 plugin.pluginConfig().p2pQuakeConfig().enabled(),
                 plugin.pluginConfig().p2pQuakeConfig().minScale(),
                 plugin.pluginConfig().p2pQuakeConfig().tsunamiEnabled(),
                 plugin.pluginConfig().p2pQuakeConfig().eewEnabled()
             ));
-            sender.sendMessage(plugin.messages().rssStatus(plugin.pluginConfig().rssConfig().enabled(), plugin.pluginConfig().rssConfig().feeds().size()));
-            plugin.pluginConfig().rssConfig().feeds().forEach(feed -> sender.sendMessage(plugin.messages().rssFeedStatus(feed.id(), feed.enabled(), feed.filterConfig().enabled())));
+            sender.sendMessage(plugin.messages(sender).rssStatus(plugin.pluginConfig().rssConfig().enabled(), plugin.pluginConfig().rssConfig().feeds().size()));
+            plugin.pluginConfig().rssConfig().feeds().forEach(feed -> sender.sendMessage(plugin.messages(sender).rssFeedStatus(feed.id(), feed.enabled(), feed.filterConfig().enabled())));
             return true;
         }
 
         if (args[0].equalsIgnoreCase("reload")) {
+            if (!requireAdmin(sender)) {
+                return true;
+            }
             if (args.length == 1) {
                 plugin.reloadPlugin();
-                sender.sendMessage(plugin.messages().reloaded());
+                sender.sendMessage(plugin.messages(sender).reloaded());
                 return true;
             }
             if (plugin.reloadTarget(args[1])) {
-                sender.sendMessage(plugin.messages().reloaded(args[1]));
+                sender.sendMessage(plugin.messages(sender).reloaded(args[1]));
                 return true;
             }
-            sender.sendMessage(plugin.messages().unknownReloadTarget(args[1]));
+            sender.sendMessage(plugin.messages(sender).unknownReloadTarget(args[1]));
             return true;
         }
 
         if (args[0].equalsIgnoreCase("check")) {
+            if (!requireAdmin(sender)) {
+                return true;
+            }
             if (args.length == 1) {
                 plugin.runManualCheck();
-                sender.sendMessage(plugin.messages().checkStarted());
+                sender.sendMessage(plugin.messages(sender).checkStarted());
                 return true;
             }
             if (plugin.runManualCheck(args[1])) {
-                sender.sendMessage(plugin.messages().checkStarted(args[1]));
+                sender.sendMessage(plugin.messages(sender).checkStarted(args[1]));
                 return true;
             }
-            sender.sendMessage(plugin.messages().unknownCheckTarget(args[1]));
+            sender.sendMessage(plugin.messages(sender).unknownCheckTarget(args[1]));
             return true;
         }
 
+        if (args[0].equalsIgnoreCase("language")) {
+            handleLanguage(sender, args);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void handleLanguage(CommandSender sender, String[] args) {
+        if (args.length == 1) {
+            sender.sendMessage(plugin.messages(sender).languageCurrent(plugin.pluginConfig().language(), plugin.personalLanguage(sender)));
+            return;
+        }
+
+        if (args[1].equalsIgnoreCase("list")) {
+            sender.sendMessage(plugin.messages(sender).languageList());
+            return;
+        }
+
+        if (args[1].equalsIgnoreCase("default")) {
+            if (!requireAdmin(sender)) {
+                return;
+            }
+            if (args.length < 3) {
+                sender.sendMessage(plugin.messages(sender).languageCurrent(plugin.pluginConfig().language(), plugin.personalLanguage(sender)));
+                return;
+            }
+            if (!LanguageRegistry.supported(args[2])) {
+                sender.sendMessage(plugin.messages(sender).languageUnknown(args[2]));
+                return;
+            }
+            plugin.setDefaultLanguage(args[2]);
+            sender.sendMessage(plugin.messages(sender).languageDefaultChanged(plugin.pluginConfig().language()));
+            return;
+        }
+
+        if (args[1].equalsIgnoreCase("personal")) {
+            if (args.length < 3) {
+                sender.sendMessage(plugin.messages(sender).languageCurrent(plugin.pluginConfig().language(), plugin.personalLanguage(sender)));
+                return;
+            }
+            if (args[2].equalsIgnoreCase("default") || args[2].equalsIgnoreCase("clear")) {
+                if (!plugin.clearPersonalLanguage(sender)) {
+                    sender.sendMessage(plugin.messages(sender).languageConsolePersonalUnsupported());
+                    return;
+                }
+                sender.sendMessage(plugin.messages(sender).languagePersonalCleared());
+                return;
+            }
+            if (!LanguageRegistry.supported(args[2])) {
+                sender.sendMessage(plugin.messages(sender).languageUnknown(args[2]));
+                return;
+            }
+            if (!plugin.setPersonalLanguage(sender, args[2])) {
+                sender.sendMessage(plugin.messages(sender).languageConsolePersonalUnsupported());
+                return;
+            }
+            sender.sendMessage(plugin.messages(sender).languagePersonalChanged(LanguageRegistry.normalize(args[2])));
+            return;
+        }
+
+        sender.sendMessage(plugin.messages(sender).languageList());
+    }
+
+    private boolean requireAdmin(CommandSender sender) {
+        if (sender.hasPermission("newsflash.admin")) {
+            return true;
+        }
+        sender.sendMessage(plugin.messages(sender).noPermission());
         return false;
     }
 
@@ -78,6 +158,26 @@ public final class NewsFlashCommand implements CommandExecutor, TabCompleter {
             return TARGETS.stream()
                 .filter(target -> target.startsWith(prefix))
                 .toList();
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("language")) {
+            String prefix = args[1].toLowerCase();
+            return LANGUAGE_TARGETS.stream()
+                .filter(target -> target.startsWith(prefix))
+                .toList();
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("language")) {
+            if (args[1].equalsIgnoreCase("personal")) {
+                String prefix = args[2].toLowerCase();
+                return java.util.stream.Stream.concat(LanguageRegistry.SUPPORTED_LANGUAGES.stream(), java.util.stream.Stream.of("default", "clear"))
+                    .filter(language -> language.toLowerCase().startsWith(prefix))
+                    .toList();
+            }
+            if (args[1].equalsIgnoreCase("default")) {
+                String prefix = args[2].toLowerCase();
+                return LanguageRegistry.SUPPORTED_LANGUAGES.stream()
+                    .filter(language -> language.toLowerCase().startsWith(prefix))
+                    .toList();
+            }
         }
         if (args.length != 1) {
             return List.of();

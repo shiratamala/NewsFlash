@@ -57,6 +57,10 @@ target/NewsFlash-0.1.0.jar
 /newsflash reload mofa
 /newsflash reload p2pquake
 /newsflash reload rss
+/newsflash language
+/newsflash language list
+/newsflash language personal <language|default>
+/newsflash language default <language>
 ```
 
 | コマンド | 説明 |
@@ -69,6 +73,11 @@ target/NewsFlash-0.1.0.jar
 | `/newsflash reload mofa` | 外務省データ設定だけ再読み込みします |
 | `/newsflash reload p2pquake` | P2P地震情報のWebSocketを再接続します |
 | `/newsflash reload rss` | RSS/Atom設定だけ再読み込みします |
+| `/newsflash language` | 現在のデフォルト言語と個人言語を表示します |
+| `/newsflash language list` | 対応言語を表示します |
+| `/newsflash language personal <language>` | 自分のコマンド応答言語を設定します |
+| `/newsflash language personal default` | 自分の個人言語を解除します |
+| `/newsflash language default <language>` | サーバーのデフォルト言語を変更します |
 
 権限:
 
@@ -118,6 +127,8 @@ plugins/NewsFlash/languages/ru.yml
 ```
 
 文言を調整したい場合は、対象の言語ファイルを編集して `/newsflash reload` を実行してください。`ja` の未定義キーは日本語に、それ以外の未定義キーは英語にフォールバックします。
+
+個人言語は `plugins/NewsFlash/player-languages.yml` に保存されます。現時点で個人言語が反映されるのはコマンド応答です。速報通知本文は受信時に生成されるため、サーバーのデフォルト言語で配信されます。
 
 ## 外務省 海外安全情報
 

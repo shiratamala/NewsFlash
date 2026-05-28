@@ -17,6 +17,14 @@ commands:
   check-started: "NewsFlash の確認を開始しました。"
   check-started-target: "NewsFlash の確認を開始しました: {target}"
   unknown-check-target: "不明または未対応の check 対象です: {target}"
+  language-current: "デフォルト言語: {default} / 個人言語: {personal}"
+  language-default-changed: "デフォルト言語を {language} に変更しました。"
+  language-personal-changed: "個人言語を {language} に変更しました。"
+  language-personal-cleared: "個人言語を解除し、デフォルト言語を使います。"
+  language-console-personal-unsupported: "個人言語はプレイヤーのみ設定できます。"
+  language-unknown: "未対応の言語です: {language} / 対応言語: {languages}"
+  language-list: "対応言語: {languages}"
+  no-permission: "このコマンドを実行する権限がありません。"
 
 # 日本固有寄りの翻訳キー:
 sources:

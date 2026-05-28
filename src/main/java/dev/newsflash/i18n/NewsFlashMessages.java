@@ -2,26 +2,12 @@ package dev.newsflash.i18n;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Set;
 import java.util.List;
 import java.util.Map;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class NewsFlashMessages {
-    private static final Set<String> SUPPORTED_LANGUAGES = Set.of(
-        "ja",
-        "en",
-        "zh_CN",
-        "zh_TW",
-        "ko",
-        "de",
-        "fr",
-        "es",
-        "pt_BR",
-        "ru"
-    );
-
     private final YamlConfiguration messages;
     private final YamlConfiguration fallback;
 
@@ -31,8 +17,8 @@ public final class NewsFlashMessages {
     }
 
     public static NewsFlashMessages load(JavaPlugin plugin, String language) {
-        String normalized = normalizeLanguage(language);
-        SUPPORTED_LANGUAGES.forEach(supportedLanguage -> ensureLanguageFile(plugin, supportedLanguage));
+        String normalized = LanguageRegistry.normalize(language);
+        LanguageRegistry.SUPPORTED_LANGUAGES.forEach(supportedLanguage -> ensureLanguageFile(plugin, supportedLanguage));
 
         YamlConfiguration fallback = loadBundled(plugin, normalized.equals("ja") ? "ja" : "en");
         YamlConfiguration selected = YamlConfiguration.loadConfiguration(plugin.getDataFolder().toPath()
@@ -94,6 +80,38 @@ public final class NewsFlashMessages {
 
     public String unknownCheckTarget(String target) {
         return format("commands.unknown-check-target", Map.of("target", target));
+    }
+
+    public String languageCurrent(String defaultLanguage, String personalLanguage) {
+        return format("commands.language-current", Map.of("default", defaultLanguage, "personal", personalLanguage));
+    }
+
+    public String languageDefaultChanged(String language) {
+        return format("commands.language-default-changed", Map.of("language", language));
+    }
+
+    public String languagePersonalChanged(String language) {
+        return format("commands.language-personal-changed", Map.of("language", language));
+    }
+
+    public String languagePersonalCleared() {
+        return text("commands.language-personal-cleared");
+    }
+
+    public String languageConsolePersonalUnsupported() {
+        return text("commands.language-console-personal-unsupported");
+    }
+
+    public String languageUnknown(String language) {
+        return format("commands.language-unknown", Map.of("language", language, "languages", String.join(", ", LanguageRegistry.SUPPORTED_LANGUAGES)));
+    }
+
+    public String languageList() {
+        return format("commands.language-list", Map.of("languages", String.join(", ", LanguageRegistry.SUPPORTED_LANGUAGES)));
+    }
+
+    public String noPermission() {
+        return text("commands.no-permission");
     }
 
     public String mofaSource() {
@@ -219,18 +237,6 @@ public final class NewsFlashMessages {
         }
         value = fallback.getString(path);
         return value == null ? path : value;
-    }
-
-    private static String normalizeLanguage(String language) {
-        if (language == null) {
-            return "ja";
-        }
-        for (String supportedLanguage : SUPPORTED_LANGUAGES) {
-            if (supportedLanguage.equalsIgnoreCase(language)) {
-                return supportedLanguage;
-            }
-        }
-        return "ja";
     }
 
     private static void ensureLanguageFile(JavaPlugin plugin, String language) {
