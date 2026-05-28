@@ -4,12 +4,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>dev.newsflash</groupId>
-    <artifactId>newsflashjp</artifactId>
+    <artifactId>newsflash</artifactId>
     <version>0.1.0</version>
     <packaging>jar</packaging>
 
-    <name>NewsFlashJP</name>
-    <description>Japan-focused safety alerts for Minecraft server chat.</description>
+    <name>NewsFlash</name>
+    <description>Real-time safety alerts for Minecraft server chat.</description>
 
     <properties>
         <java.version>21</java.version>
@@ -39,7 +39,7 @@
     </dependencies>
 
     <build>
-        <finalName>NewsFlashJP-${project.version}</finalName>
+        <finalName>NewsFlash-${project.version}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

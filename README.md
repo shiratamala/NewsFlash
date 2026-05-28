@@ -1,4 +1,4 @@
-# NewsFlashJP
+# NewsFlash
 
 Paper 1.20.6 以降向けのニュース速報プラグインです。
 
@@ -36,14 +36,14 @@ mvn package
 生成物:
 
 ```text
-target/NewsFlashJP-0.1.0.jar
+target/NewsFlash-0.1.0.jar
 ```
 
 ## 導入
 
-1. `target/NewsFlashJP-0.1.0.jar` をサーバーの `plugins/` フォルダへ配置します。
+1. `target/NewsFlash-0.1.0.jar` をサーバーの `plugins/` フォルダへ配置します。
 2. サーバーを起動します。
-3. 生成された `plugins/NewsFlashJP/config.yml` を必要に応じて編集します。
+3. 生成された `plugins/NewsFlash/config.yml` を必要に応じて編集します。
 4. 設定変更後は `/newsflash reload` を実行します。
 
 ## コマンド
